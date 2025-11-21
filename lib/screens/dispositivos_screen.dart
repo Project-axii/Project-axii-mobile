@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'adicionar_dispositivos_screen.dart';
+import 'novo_grupo_screen.dart';
 
 class DispositivosScreen extends StatelessWidget {
   const DispositivosScreen({super.key});
@@ -21,10 +23,20 @@ class DispositivosScreen extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onBackground,
                     ),
               ),
-              Icon(
-                Icons.add,
-                color: Theme.of(context).colorScheme.onBackground,
-                size: 28,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdicionarDispositivosScreen(),
+                    ),
+                  );
+                },
+                child: Icon(
+                  Icons.add,
+                  color: Theme.of(context).colorScheme.onBackground,
+                  size: 28,
+                ),
               ),
             ],
           ),
@@ -46,12 +58,24 @@ class DispositivosScreen extends StatelessWidget {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _buildGroupCard(context, 'Lab1', Icons.bed, false),
+                _buildGroupCard(context, 'Lab 1', Icons.speaker_group, false),
                 const SizedBox(width: 16),
-                _buildGroupCard(context, 'Novo grupo', Icons.add, true),
+                _buildGroupCard(context, 'Lab 2', Icons.speaker_group, false),
                 const SizedBox(width: 16),
                 _buildGroupCard(
-                    context, 'Combine speakers', Icons.speaker_group, false),
+                  context,
+                  'Novo grupo',
+                  Icons.add,
+                  true,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NovoGrupoScreen(),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -74,7 +98,7 @@ class DispositivosScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.lightbulb, color: Colors.yellow),
-                    title: const Text('Lâmpada WiFi'),
+                    title: const Text('Lâmpada 1'),
                     trailing: TextButton(
                       onPressed: () {},
                       child: const Text('Desativada'),
@@ -89,17 +113,8 @@ class DispositivosScreen extends StatelessWidget {
                       backgroundColor: Colors.grey.shade700,
                       child: const Icon(Icons.speaker, color: Colors.white),
                     ),
-                    title: const Text('Esp8266 lab 1'),
+                    title: const Text('Power Link'),
                     subtitle: const Text('On-line'),
-                    onTap: () {},
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Card(
-                  child: ListTile(
-                    leading:
-                        const Icon(Icons.phone_android, color: Colors.grey),
-                    title: const Text('Neste telefone'),
                     onTap: () {},
                   ),
                 ),
@@ -112,7 +127,12 @@ class DispositivosScreen extends StatelessWidget {
   }
 
   Widget _buildGroupCard(
-      BuildContext context, String title, IconData icon, bool isDashed) {
+    BuildContext context,
+    String title,
+    IconData icon,
+    bool isDashed, {
+    VoidCallback? onTap,
+  }) {
     return Container(
       width: 100,
       decoration: BoxDecoration(
@@ -123,7 +143,7 @@ class DispositivosScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),

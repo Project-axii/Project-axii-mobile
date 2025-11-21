@@ -6,6 +6,7 @@ import 'listas_notas_screen.dart';
 import 'alarmes_timers_screen.dart';
 import 'calendario_screen.dart';
 import 'configuracoes_screen.dart';
+import 'adicionar_dispositivos_screen.dart';
 
 class MaisScreen extends StatelessWidget {
   const MaisScreen({super.key});
@@ -50,12 +51,6 @@ class MaisScreen extends StatelessWidget {
         'route': const AlarmesTimersScreen(),
       },
       {
-        'icon': Icons.games,
-        'title': 'Skills e jogos',
-        'color': Colors.indigo,
-        'route': null,
-      },
-      {
         'icon': Icons.calendar_today,
         'title': 'Calendário',
         'color': Colors.pink,
@@ -85,10 +80,20 @@ class MaisScreen extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onBackground,
                     ),
               ),
-              Icon(
-                Icons.add,
-                color: Theme.of(context).colorScheme.onBackground,
-                size: 28,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdicionarDispositivosScreen(),
+                    ),
+                  );
+                },
+                child: Icon(
+                  Icons.add,
+                  color: Theme.of(context).colorScheme.onBackground,
+                  size: 28,
+                ),
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'adicionar_dispositivos_screen.dart';
 
 class InicioScreen extends StatelessWidget {
   const InicioScreen({super.key});
@@ -23,8 +24,19 @@ class InicioScreen extends StatelessWidget {
               ),
               Row(
                 children: [
-                  Icon(Icons.add,
-                      color: Theme.of(context).colorScheme.onBackground),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const AdicionarDispositivosScreen(),
+                        ),
+                      );
+                    },
+                    child: Icon(Icons.add,
+                        color: Theme.of(context).colorScheme.onBackground),
+                  ),
                   const SizedBox(width: 8),
                   Icon(Icons.notifications_outlined,
                       color: Theme.of(context).colorScheme.onBackground),
@@ -95,7 +107,7 @@ class InicioScreen extends StatelessWidget {
               children: [
                 _buildFavoriteCard(
                   context,
-                  'Esp8266 lab 1',
+                  'lab 1',
                   Icons.speaker,
                   false,
                 ),
@@ -103,12 +115,6 @@ class InicioScreen extends StatelessWidget {
                   context,
                   'Alarmes',
                   Icons.alarm,
-                  true,
-                ),
-                _buildFavoriteCard(
-                  context,
-                  'Continuar escutando',
-                  Icons.play_arrow,
                   true,
                 ),
               ],

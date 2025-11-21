@@ -31,32 +31,6 @@ class AxiiBottomNavigation extends StatelessWidget {
               _buildNavItem(context, Icons.home, 0),
               _buildNavItem(context, Icons.lightbulb_outline, 1),
               _buildNavItem(context, Icons.menu, 2),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade800,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Pergunte',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.mic,
-                      color: Colors.blue.shade400,
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),

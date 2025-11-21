@@ -127,21 +127,14 @@ class _ConfigDispositivosScreenState extends State<ConfigDispositivosScreen> {
 
                   _buildDispositivoCard(
                     context,
-                    nome: 'Smart Lâmpada WiFi',
+                    nome: 'Lâmpada',
                     tipo: 'Iluminação',
                     icon: Icons.lightbulb_outline,
                     status: 'Conectado',
                   ),
                   _buildDispositivoCard(
                     context,
-                    nome: 'Echo Dot de Pedro',
-                    tipo: 'Alto-falante',
-                    icon: Icons.speaker,
-                    status: 'Online',
-                  ),
-                  _buildDispositivoCard(
-                    context,
-                    nome: 'Projetor Sala 101',
+                    nome: 'Projetor Sala 1',
                     tipo: 'Projetor',
                     icon: Icons.videocam,
                     status: 'Desconectado',

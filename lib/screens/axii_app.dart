@@ -17,9 +17,9 @@ class _axiiMainScreenState extends State<axiiMainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const MaisScreen(),
     const InicioScreen(),
     const DispositivosScreen(),
+    const MaisScreen(),
     const ConfiguracoesScreen(),
   ];
 
