@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/axii_app.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const axiiApp());
@@ -32,7 +32,7 @@ class axiiApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const axiiMainScreen(),
+      home: const LoginScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'mais_screen.dart';
 import 'inicio_screen.dart';
 import 'dispositivos_screen.dart';
