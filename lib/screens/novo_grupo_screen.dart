@@ -25,14 +25,10 @@ class _NovoGrupoScreenState extends State<NovoGrupoScreen> {
   ];
 
   final List<Map<String, dynamic>> _dispositivos = [
+    {'nome': 'AX-LM', 'icon': Icons.lightbulb, 'status': 'On-line'},
+    {'nome': 'Axii Nexus', 'icon': Icons.speaker, 'status': 'On-line'},
     {
-      'nome': 'Smart Lâmpada WiFi',
-      'icon': Icons.lightbulb,
-      'status': 'On-line'
-    },
-    {'nome': 'Echo Dot de Pedro', 'icon': Icons.speaker, 'status': 'On-line'},
-    {
-      'nome': 'Alexa neste telefone',
+      'nome': 'Ar-condicionado',
       'icon': Icons.phone_android,
       'status': 'On-line'
     },

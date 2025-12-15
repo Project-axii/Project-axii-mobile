@@ -6,7 +6,8 @@ import 'listas_notas_screen.dart';
 import 'alarmes_timers_screen.dart';
 import 'calendario_screen.dart';
 import 'configuracoes_screen.dart';
-import 'adicionar_dispositivos_screen.dart';
+import 'historico_screen.dart';
+import 'estatisticas_screen.dart';
 
 class MaisScreen extends StatelessWidget {
   const MaisScreen({super.key});
@@ -25,6 +26,18 @@ class MaisScreen extends StatelessWidget {
         'title': 'Monitoramento',
         'color': Colors.blue,
         'route': const MonitoramentoScreen(),
+      },
+      {
+        'icon': Icons.bar_chart,
+        'title': 'Estatísticas',
+        'color': Colors.teal,
+        'route': const EstatisticasScreen(),
+      },
+      {
+        'icon': Icons.history,
+        'title': 'Histórico',
+        'color': Colors.cyan,
+        'route': const HistoricoScreen(),
       },
       {
         'icon': Icons.list_alt,
