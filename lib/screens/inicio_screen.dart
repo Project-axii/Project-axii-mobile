@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'adicionar_dispositivos_screen.dart';
+import 'perfil_screen.dart';
+import 'listas_notas_screen.dart';
+import 'alarmes_timers_screen.dart';
+import 'notificacoes_screen.dart';
 
 class InicioScreen extends StatelessWidget {
   const InicioScreen({super.key});
@@ -29,17 +32,35 @@ class InicioScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const AdicionarDispositivosScreen(),
+                          builder: (context) => const PerfilScreen(),
                         ),
                       );
                     },
-                    child: Icon(Icons.add,
-                        color: Theme.of(context).colorScheme.onBackground),
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.notifications_outlined,
-                      color: Theme.of(context).colorScheme.onBackground),
+                  const SizedBox(width: 16),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificacoesScreen(),
+                        ),
+                      );
+                    },
+                    child: Icon(
+                      Icons.notifications_outlined,
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -66,17 +87,52 @@ class InicioScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Activities List
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.list_alt, color: Colors.blue),
+              title: const Text('Lista de compras'),
+              subtitle: const Text('1 item'),
+              trailing: const Icon(Icons.add_circle, color: Colors.blue),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ListasNotasScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
 
           Card(
             child: ListTile(
               leading: const Icon(Icons.timer, color: Colors.cyan),
               title: const Text('Iniciar um timer'),
               subtitle: const Text(
-                  'pode notificar você após um\ndeterminado período de tempo'),
-              onTap: () {},
+                  'o App pode notificar você após um\ndeterminado período de tempo'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AlarmesTimersScreen(),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 12),
+
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.music_note, color: Colors.green),
+              title: const Text('Vincule serviços de música'),
+              subtitle: const Text(
+                  'Faça o streaming de sua música favorita e\nmais.'),
+              onTap: () {},
+            ),
+          ),
+          const SizedBox(height: 24),
 
           // Favoritos Section
           Row(
@@ -116,6 +172,7 @@ class InicioScreen extends StatelessWidget {
                   'Alarmes',
                   Icons.alarm,
                   true,
+                  subtitle: 'Favorito sugerido',
                 ),
               ],
             ),
