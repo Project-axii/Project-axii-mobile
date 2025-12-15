@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'adicionar_dispositivos_screen.dart';
 import 'novo_grupo_screen.dart';
+import 'detalhes_dispositivo_screen.dart';
 
 class DispositivosScreen extends StatelessWidget {
   const DispositivosScreen({super.key});
@@ -103,7 +104,18 @@ class DispositivosScreen extends StatelessWidget {
                       onPressed: () {},
                       child: const Text('Desativada'),
                     ),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DetalhesDispositivoScreen(
+                            nomeDispositivo: 'Lâmpada 1',
+                            tipoDispositivo: 'Lâmpada',
+                            isOnline: false,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -115,7 +127,18 @@ class DispositivosScreen extends StatelessWidget {
                     ),
                     title: const Text('Power Link'),
                     subtitle: const Text('On-line'),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DetalhesDispositivoScreen(
+                            nomeDispositivo: 'Power Link',
+                            tipoDispositivo: 'Speaker',
+                            isOnline: true,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
