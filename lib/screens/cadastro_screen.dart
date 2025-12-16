@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'axii_app.dart';
+import '../services/auth_service.dart';
 
 class CadastroScreen extends StatefulWidget {
   const CadastroScreen({super.key});
@@ -14,6 +15,8 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -44,13 +47,54 @@ class _CadastroScreenState extends State<CadastroScreen> {
         _isLoading = true;
       });
 
-      // Simula chamada de API
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const axiiMainScreen()),
+      try {
+        final result = await _authService.register(
+          name: _nomeController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
         );
+
+        if (!mounted) return;
+
+        if (result['success'] == true) {
+          // Cadastro bem-sucedido
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text(result['message'] ?? 'Cadastro realizado com sucesso'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Redirecionar para tela principal
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const axiiMainScreen()),
+          );
+        } else {
+          // Erro no cadastro
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Erro ao fazer cadastro'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -106,6 +150,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   TextFormField(
                     controller: _nomeController,
                     keyboardType: TextInputType.name,
+                    textCapitalization: TextCapitalization.words,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Nome completo',
@@ -134,7 +179,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Por favor, insira seu nome';
                       }
-                      if (value.length < 3) {
+                      if (value.trim().length < 3) {
                         return 'Nome deve ter pelo menos 3 caracteres';
                       }
                       return null;
@@ -174,7 +219,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Por favor, insira seu email';
                       }
-                      if (!value.contains('@')) {
+                      if (!value.contains('@') || !value.contains('.')) {
                         return 'Por favor, insira um email válido';
                       }
                       return null;
@@ -385,7 +430,12 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   // Botões de cadastro social
                   OutlinedButton.icon(
                     onPressed: () {
-                      // Implementar cadastro com Google
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text('Cadastro com Google em desenvolvimento'),
+                        ),
+                      );
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
@@ -401,7 +451,12 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () {
-                      // Implementar cadastro com Apple
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text('Cadastro com Apple em desenvolvimento'),
+                        ),
+                      );
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,

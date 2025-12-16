@@ -8,6 +8,7 @@ import 'calendario_screen.dart';
 import 'configuracoes_screen.dart';
 import 'historico_screen.dart';
 import 'estatisticas_screen.dart';
+import 'adicionar_dispositivos_screen.dart';
 
 class MaisScreen extends StatelessWidget {
   const MaisScreen({super.key});
