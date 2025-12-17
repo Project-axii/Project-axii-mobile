@@ -19,12 +19,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _rememberMe = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberMePreference();
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRememberMePreference() async {
+    final rememberMe = await _authService.getRememberMe();
+    setState(() {
+      _rememberMe = rememberMe;
+    });
   }
 
   Future<void> _handleLogin() async {
@@ -37,6 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final result = await _authService.login(
           _emailController.text.trim(),
           _passwordController.text,
+          rememberMe: _rememberMe,
         );
 
         if (!mounted) return;
@@ -47,8 +62,13 @@ class _LoginScreenState extends State<LoginScreen> {
             SnackBar(
               content: Text(result['message'] ?? 'Login realizado com sucesso'),
               backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
             ),
           );
+
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          if (!mounted) return;
 
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const axiiMainScreen()),
@@ -59,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
             SnackBar(
               content: Text(result['message'] ?? 'Erro ao fazer login'),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
             ),
           );
         }
@@ -69,6 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(
             content: Text('Erro: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
       } finally {
@@ -211,26 +233,77 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const EsqueceuSenhaScreen(),
+                  // Checkbox "Manter conectado" e "Esqueceu senha"
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Checkbox Manter Conectado
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _rememberMe = !_rememberMe;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _rememberMe = value ?? true;
+                                      });
+                                    },
+                                    activeColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Flexible(
+                                  child: Text(
+                                    'Manter conectado',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      },
-                      child: Text(
-                        'Esqueceu a senha?',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
-                    ),
+
+                      // Link Esqueceu Senha
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EsqueceuSenhaScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Esqueceu a senha?',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
@@ -288,7 +361,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Botões de login social
                   OutlinedButton.icon(
                     onPressed: () {
-                      // Implementar login com Google
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Login com Google em desenvolvimento'),
@@ -309,7 +381,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () {
-                      // Implementar login com Apple
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Login com Apple em desenvolvimento'),

@@ -1,21 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/api_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await ApiConfig.initialize();
-  runApp(const axiiApp());
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
+
+  runApp(const AxiiApp());
 }
 
-class axiiApp extends StatelessWidget {
-  const axiiApp({super.key});
+class AxiiApp extends StatelessWidget {
+  const AxiiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'axii App',
+      title: 'AXII App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
@@ -27,6 +42,7 @@ class axiiApp extends StatelessWidget {
           onBackground: Color(0xFFF9FAFB),
           onSurface: Color(0xFFF9FAFB),
         ),
+        scaffoldBackgroundColor: const Color(0xFF111827),
         cardTheme: CardTheme(
           color: const Color(0xFF374151),
           elevation: 0,
@@ -34,9 +50,15 @@ class axiiApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+        ),
       ),
-      home: const LoginScreen(),
-      debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.dark,
+      home: const SplashScreen(),
     );
   }
 }
