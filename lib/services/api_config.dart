@@ -21,8 +21,8 @@ class ApiConfig {
   static const String deviceToggleEndpoint = 'devices/toggle.php';
   static const String deviceUpdateEndpoint = 'devices/update.php';
   static const String roomsEndpoint = 'devices/rooms.php';
+  static const String deviceCreateEndpoint = 'devices/create.php';
 
-  // 🔹 URL fallback (ngrok CORRETO)
   static const String fallbackBaseUrl = 'https://a7bc62effefa.ngrok-free.app';
 
   static Future<void> initialize() async {
@@ -59,7 +59,7 @@ class ApiConfig {
     _isInitialized = true;
     _isInitializing = false;
 
-    print('🌐 API Base URL: $_cachedBaseUrl');
+    print('API Base URL: $_cachedBaseUrl');
   }
 
   static String get baseUrl {
@@ -78,6 +78,7 @@ class ApiConfig {
   static String get deviceToggleUrl => '$baseUrl$baseRoot$deviceToggleEndpoint';
   static String get deviceUpdateUrl => '$baseUrl$baseRoot$deviceUpdateEndpoint';
   static String get roomsUrl => '$baseUrl$baseRoot$roomsEndpoint';
+  static String get deviceCreateUrl => '$baseUrl$baseRoot$deviceCreateEndpoint';
 
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
@@ -128,7 +129,6 @@ class ApiConfig {
         response = await http.get(uri, headers: finalHeaders);
     }
 
-    // 🛡️ Proteção contra HTML
     if (!response.body.trim().startsWith('{')) {
       throw Exception(
         'Resposta inválida (não é JSON):\n${response.body}',

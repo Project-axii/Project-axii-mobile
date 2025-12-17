@@ -230,4 +230,68 @@ class DeviceService {
       };
     }
   }
+
+  // Criar novo dispositivo
+  Future<Map<String, dynamic>> createDevice({
+    required String nome,
+    required String ip,
+    required String tipo,
+    required String sala,
+    String? descricao,
+  }) async {
+    try {
+      final token = await _authService.getToken();
+
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Token não encontrado',
+        };
+      }
+
+      final body = {
+        'nome': nome,
+        'ip': ip,
+        'tipo': tipo,
+        'sala': sala,
+        'descricao': descricao ?? '',
+      };
+
+      final response = await http
+          .post(
+        Uri.parse(ApiConfig.deviceCreateUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      )
+          .timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Tempo de conexão esgotado');
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 && data['success'] == true) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Erro ao criar dispositivo',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Erro de conexão: ${e.toString()}',
+      };
+    }
+  }
 }
