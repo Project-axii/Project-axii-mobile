@@ -1,199 +1,140 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // URLs de configuração com proxy CORS para Flutter Web
+  // Arquivo remoto com a URL da API
   static const String configUrl =
       'https://raw.githubusercontent.com/Project-axii/Project-axii-gateway/refs/heads/main/sistema.json';
-  static const String corsProxyUrl = 'https://corsproxy.io/?';
 
   static String? _cachedBaseUrl;
-  static DateTime? _lastFetch;
-  static const Duration cacheExpiration = Duration(minutes: 30);
   static bool _isInitialized = false;
   static bool _isInitializing = false;
 
+  // Base da API
   static const String baseRoot = '/tcc-axii/Project-Axii-api/api/';
 
+  // Endpoints
   static const String loginEndpoint = 'login.php';
   static const String registerEndpoint = 'register.php';
-  static const String forgotPasswordEndpoint = 'register.php';
+  static const String forgotPasswordEndpoint = 'forgot_password.php';
+  static const String devicesListEndpoint = 'devices/list.php';
+  static const String deviceToggleEndpoint = 'devices/toggle.php';
+  static const String deviceUpdateEndpoint = 'devices/update.php';
+  static const String roomsEndpoint = 'devices/rooms.php';
+
+  // 🔹 URL fallback (ngrok CORRETO)
+  static const String fallbackBaseUrl = 'https://a7bc62effefa.ngrok-free.app';
 
   static Future<void> initialize() async {
+    if (_isInitialized) return;
+
     if (_isInitializing) {
       while (_isInitializing) {
-        await Future.delayed(Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 100));
       }
-      return;
-    }
-
-    if (_isInitialized &&
-        _cachedBaseUrl != null &&
-        _lastFetch != null &&
-        DateTime.now().difference(_lastFetch!) < cacheExpiration) {
       return;
     }
 
     _isInitializing = true;
 
-    await _tryMultipleSources();
+    try {
+      final response = await http
+          .get(Uri.parse(configUrl))
+          .timeout(const Duration(seconds: 10));
 
-    _isInitializing = false;
-  }
+      if (response.statusCode == 200 && response.body.trim().startsWith('{')) {
+        final data = jsonDecode(response.body);
 
-  static Future<void> _tryMultipleSources() async {
-    final urlsToTry = [
-      configUrl,
-      '${corsProxyUrl}${Uri.encodeComponent(configUrl)}', // Com proxy CORS
-      'https://api.allorigins.win/get?url=${Uri.encodeComponent(configUrl)}', // Proxy alternativo
-    ];
-
-    for (int i = 0; i < urlsToTry.length; i++) {
-      final url = urlsToTry[i];
-
-      try {
-        final response = await http.get(
-          Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'Flutter App',
-            if (kIsWeb) 'Access-Control-Allow-Origin': '*',
-          },
-        ).timeout(const Duration(seconds: 10));
-
-        if (response.statusCode == 200) {
-          String jsonBody = response.body;
-
-          if (url.contains('allorigins.win')) {
-            final allOriginsData = json.decode(response.body);
-            jsonBody = allOriginsData['contents'] ?? '';
-          }
-
-          if (jsonBody.isNotEmpty) {
-            final Map<String, dynamic> data = json.decode(jsonBody);
-
-            if (data.containsKey('status') && data.containsKey('link')) {
-              if (data['status'] == 'success' &&
-                  data['link'] != null &&
-                  data['link'].toString().isNotEmpty) {
-                _cachedBaseUrl = data['link'].toString().trim();
-                _lastFetch = DateTime.now();
-                _isInitialized = true;
-                return;
-              }
-            }
-          }
+        if (data['status'] == 'success' &&
+            data['link'] != null &&
+            data['link'].toString().isNotEmpty) {
+          _cachedBaseUrl = data['link'].toString().trim();
         }
-      } catch (e) {
-        continue;
       }
+    } catch (_) {
+      // ignora e usa fallback
     }
 
-    _cachedBaseUrl = 'https://a7bc62effefa.ngrok-free.ap';
+    _cachedBaseUrl ??= fallbackBaseUrl;
     _isInitialized = true;
-    _lastFetch = DateTime.now();
+    _isInitializing = false;
 
-    print('Usando URL conhecida: $_cachedBaseUrl');
+    print('🌐 API Base URL: $_cachedBaseUrl');
   }
 
   static String get baseUrl {
     if (!_isInitialized || _cachedBaseUrl == null) {
-      print('🚀 Auto-inicializando API (síncrono)...');
-      _initializeInBackground();
-      return 'https://a7bc62effefa.ngrok-free.ap';
+      throw Exception(
+          'ApiConfig não inicializado. Chame ApiConfig.initialize() no main().');
     }
     return _cachedBaseUrl!;
   }
 
-  static void _initializeInBackground() async {
-    if (!_isInitializing && !_isInitialized) {
-      await initialize();
-    }
-  }
-
-  static void clearCache() {
-    _cachedBaseUrl = null;
-    _lastFetch = null;
-    _isInitialized = false;
-    _isInitializing = false;
-  }
-
-  static Future<void> refresh() async {
-    clearCache();
-    await initialize();
-  }
-
-  static Future<bool> testCurrentUrl() async {
-    try {
-      final testUrl = '$baseUrl$baseRoot$loginEndpoint';
-
-      final response = await http
-          .get(
-            Uri.parse(testUrl),
-            headers: defaultHeaders,
-          )
-          .timeout(const Duration(seconds: 5));
-
-      return response.statusCode == 200 || response.statusCode == 400;
-    } catch (e) {
-      return false;
-    }
-  }
-
   static String get loginUrl => '$baseUrl$baseRoot$loginEndpoint';
-  static String get registerUrl => '$baseUrl$registerEndpoint';
-  static String get forgotPasswordUrl => '$baseUrl$forgotPasswordEndpoint';
+  static String get registerUrl => '$baseUrl$baseRoot$registerEndpoint';
+  static String get forgotPasswordUrl =>
+      '$baseUrl$baseRoot$forgotPasswordEndpoint';
+  static String get devicesListUrl => '$baseUrl$baseRoot$devicesListEndpoint';
+  static String get deviceToggleUrl => '$baseUrl$baseRoot$deviceToggleEndpoint';
+  static String get deviceUpdateUrl => '$baseUrl$baseRoot$deviceUpdateEndpoint';
+  static String get roomsUrl => '$baseUrl$baseRoot$roomsEndpoint';
 
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
         'ngrok-skip-browser-warning': 'true',
-        if (kIsWeb) 'Access-Control-Allow-Origin': '*',
       };
 
   static Future<http.Response> makeRequest(
-    String endpoint, {
+    String url, {
     String method = 'GET',
     Map<String, dynamic>? body,
-    Map<String, String>? additionalHeaders,
+    Map<String, String>? headers,
   }) async {
     if (!_isInitialized) {
       await initialize();
     }
 
-    final headers = {...defaultHeaders};
-    if (additionalHeaders != null) {
-      headers.addAll(additionalHeaders);
+    final finalHeaders = {...defaultHeaders};
+    if (headers != null) {
+      finalHeaders.addAll(headers);
     }
 
-    final uri = Uri.parse(endpoint);
+    final uri = Uri.parse(url);
+
+    late http.Response response;
 
     switch (method.toUpperCase()) {
       case 'POST':
-        return await http.post(
+        response = await http.post(
           uri,
-          headers: headers,
-          body: body != null ? json.encode(body) : null,
+          headers: finalHeaders,
+          body: body != null ? jsonEncode(body) : null,
         );
+        break;
+
       case 'PUT':
-        return await http.put(
+        response = await http.put(
           uri,
-          headers: headers,
-          body: body != null ? json.encode(body) : null,
+          headers: finalHeaders,
+          body: body != null ? jsonEncode(body) : null,
         );
+        break;
+
       case 'DELETE':
-        return await http.delete(uri, headers: headers);
+        response = await http.delete(uri, headers: finalHeaders);
+        break;
+
       default:
-        return await http.get(uri, headers: headers);
+        response = await http.get(uri, headers: finalHeaders);
     }
-  }
 
-  static Future<http.Response> get(String endpoint) async {
-    return makeRequest(endpoint, method: 'GET');
-  }
+    // 🛡️ Proteção contra HTML
+    if (!response.body.trim().startsWith('{')) {
+      throw Exception(
+        'Resposta inválida (não é JSON):\n${response.body}',
+      );
+    }
 
-  static Future<http.Response> post(
-      String endpoint, Map<String, dynamic> body) async {
-    return makeRequest(endpoint, method: 'POST', body: body);
+    return response;
   }
 }
