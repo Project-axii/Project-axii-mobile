@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/notification_service.dart';
 
 class NotificacoesScreen extends StatefulWidget {
   const NotificacoesScreen({super.key});
@@ -8,53 +9,142 @@ class NotificacoesScreen extends StatefulWidget {
 }
 
 class _NotificacoesScreenState extends State<NotificacoesScreen> {
-  final List<Map<String, dynamic>> _notificacoes = [
-    {
-      'titulo': 'Rotina concluída',
-      'mensagem': 'Iniciar Aula foi executada com sucesso',
-      'tempo': '5 min atrás',
-      'lida': false,
-      'icon': Icons.check_circle,
-      'color': Colors.green,
-    },
-    {
-      'titulo': 'Dispositivo desconectado',
-      'mensagem': 'Smart Lâmpada WiFi está offline',
-      'tempo': '15 min atrás',
-      'lida': false,
-      'icon': Icons.warning,
-      'color': Colors.orange,
-    },
-    {
-      'titulo': 'Lembrete de aula',
-      'mensagem': 'Sua próxima aula começa em 30 minutos',
-      'tempo': '1 hora atrás',
-      'lida': true,
-      'icon': Icons.event,
-      'color': Colors.blue,
-    },
-    {
-      'titulo': 'Atualização disponível',
-      'mensagem': 'Uma nova versão do app está disponível',
-      'tempo': '2 horas atrás',
-      'lida': true,
-      'icon': Icons.system_update,
-      'color': Colors.purple,
-    },
-    {
-      'titulo': 'Economia de energia',
-      'mensagem': 'Você economizou 25% de energia esta semana',
-      'tempo': '5 horas atrás',
-      'lida': true,
-      'icon': Icons.energy_savings_leaf,
-      'color': Colors.teal,
-    },
-  ];
+  final NotificationService _notificationService = NotificationService();
+  List<Map<String, dynamic>> _notificacoes = [];
+  bool _isLoading = true;
+  int _naoLidas = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await _notificationService.getNotifications();
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (result['success']) {
+          _notificacoes = List<Map<String, dynamic>>.from(result['data']);
+          _naoLidas = result['nao_lidas'];
+        } else {
+          _showErrorSnackBar(result['message']);
+        }
+      });
+    }
+  }
+
+  Future<void> _markAsRead(int id, int index) async {
+    final result = await _notificationService.markAsRead(id);
+
+    if (result['success']) {
+      setState(() {
+        _notificacoes[index]['lida'] = true;
+        _naoLidas = _notificacoes.where((n) => !n['lida']).length;
+      });
+    }
+  }
+
+  Future<void> _markAllAsRead() async {
+    final result = await _notificationService.markAllAsRead();
+
+    if (result['success']) {
+      setState(() {
+        for (var notificacao in _notificacoes) {
+          notificacao['lida'] = true;
+        }
+        _naoLidas = 0;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text('${result['affected']} notificações marcadas como lidas'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } else {
+      _showErrorSnackBar(result['message']);
+    }
+  }
+
+  Future<void> _deleteNotification(int id, int index) async {
+    final result = await _notificationService.deleteNotification(id);
+
+    if (result['success']) {
+      setState(() {
+        final wasUnread = !_notificacoes[index]['lida'];
+        _notificacoes.removeAt(index);
+        if (wasUnread) {
+          _naoLidas--;
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Notificação removida'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } else {
+      _showErrorSnackBar(result['message']);
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName) {
+      case 'check_circle':
+        return Icons.check_circle;
+      case 'warning':
+        return Icons.warning;
+      case 'error':
+        return Icons.error;
+      case 'event':
+        return Icons.event;
+      case 'system_update':
+        return Icons.system_update;
+      case 'energy_savings_leaf':
+        return Icons.energy_savings_leaf;
+      case 'info':
+      default:
+        return Icons.info;
+    }
+  }
+
+  Color _getColor(String colorHex) {
+    try {
+      return Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+    } catch (e) {
+      return const Color(0xFF8B5CF6);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final notLidas = _notificacoes.where((n) => !n['lida']).length;
-
     return Scaffold(
       backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
@@ -71,9 +161,9 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
               'Notificações',
               style: TextStyle(color: Colors.white, fontSize: 20),
             ),
-            if (notLidas > 0)
+            if (_naoLidas > 0)
               Text(
-                '$notLidas não lida${notLidas > 1 ? 's' : ''}',
+                '$_naoLidas não lida${_naoLidas > 1 ? 's' : ''}',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.5),
                   fontSize: 12,
@@ -82,15 +172,13 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
           ],
         ),
         actions: [
-          if (notLidas > 0)
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _loadNotifications,
+          ),
+          if (_naoLidas > 0)
             TextButton(
-              onPressed: () {
-                setState(() {
-                  for (var notificacao in _notificacoes) {
-                    notificacao['lida'] = true;
-                  }
-                });
-              },
+              onPressed: _markAllAsRead,
               child: const Text(
                 'Marcar todas',
                 style: TextStyle(color: Color(0xFF8B5CF6)),
@@ -98,42 +186,98 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
             ),
         ],
       ),
-      body: _notificacoes.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_off_outlined,
-                    size: 80,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Nenhuma notificação',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF8B5CF6),
               ),
             )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _notificacoes.length,
-              itemBuilder: (context, index) {
-                final notificacao = _notificacoes[index];
-                return _buildNotificationItem(notificacao, index);
-              },
-            ),
+          : _notificacoes.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.notifications_off_outlined,
+                        size: 80,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nenhuma notificação',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _loadNotifications,
+                        child: const Text(
+                          'Atualizar',
+                          style: TextStyle(color: Color(0xFF8B5CF6)),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  color: const Color(0xFF8B5CF6),
+                  backgroundColor: const Color(0xFF1F2937),
+                  onRefresh: _loadNotifications,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _notificacoes.length,
+                    itemBuilder: (context, index) {
+                      final notificacao = _notificacoes[index];
+                      return _buildNotificationItem(notificacao, index);
+                    },
+                  ),
+                ),
     );
   }
 
   Widget _buildNotificationItem(Map<String, dynamic> notificacao, int index) {
+    final icon = _getIconData(notificacao['icon']);
+    final color = _getColor(notificacao['color']);
+
     return Dismissible(
-      key: Key('notification_$index'),
+      key: Key('notification_${notificacao['id']}'),
       direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1F2937),
+              title: const Text(
+                'Confirmar exclusão',
+                style: TextStyle(color: Colors.white),
+              ),
+              content: const Text(
+                'Deseja realmente excluir esta notificação?',
+                style: TextStyle(color: Colors.white70),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text(
+                    'Excluir',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -144,15 +288,7 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
         child: const Icon(Icons.delete, color: Colors.white),
       ),
       onDismissed: (direction) {
-        setState(() {
-          _notificacoes.removeAt(index);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Notificação removida'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        _deleteNotification(notificacao['id'], index);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -173,9 +309,9 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
-              setState(() {
-                notificacao['lida'] = true;
-              });
+              if (!notificacao['lida']) {
+                _markAsRead(notificacao['id'], index);
+              }
             },
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -185,12 +321,12 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: notificacao['color'].withOpacity(0.1),
+                      color: color.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
-                      notificacao['icon'],
-                      color: notificacao['color'],
+                      icon,
+                      color: color,
                       size: 20,
                     ),
                   ),
@@ -232,6 +368,26 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
                             fontSize: 13,
                           ),
                         ),
+                        if (notificacao['dispositivo'] != null) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.devices,
+                                size: 12,
+                                color: Colors.white.withOpacity(0.4),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                notificacao['dispositivo'],
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.4),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 8),
                         Text(
                           notificacao['tempo'],

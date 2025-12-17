@@ -22,6 +22,10 @@ class ApiConfig {
   static const String deviceUpdateEndpoint = 'devices/update.php';
   static const String roomsEndpoint = 'devices/rooms.php';
   static const String deviceCreateEndpoint = 'devices/create.php';
+  static const String notificationDeleteEndpoint = 'notifications/delete.php';
+  static const String notificationMarkReadEndpoint =
+      'notifications/mark_read.php';
+  static const String notificationReadEndpoint = 'notifications/read.php';
 
   static const String fallbackBaseUrl = 'https://a7bc62effefa.ngrok-free.app';
 
@@ -79,6 +83,12 @@ class ApiConfig {
   static String get deviceUpdateUrl => '$baseUrl$baseRoot$deviceUpdateEndpoint';
   static String get roomsUrl => '$baseUrl$baseRoot$roomsEndpoint';
   static String get deviceCreateUrl => '$baseUrl$baseRoot$deviceCreateEndpoint';
+  static String get notificationDeleteUrl =>
+      '$baseUrl$baseRoot$notificationDeleteEndpoint';
+  static String get notificationMarkReadUrl =>
+      '$baseUrl$baseRoot$notificationMarkReadEndpoint';
+  static String get notificationReadUrl =>
+      '$baseUrl$baseRoot$notificationReadEndpoint';
 
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
