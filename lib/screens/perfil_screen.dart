@@ -1,296 +1,325 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'login_screen.dart';
 
-class PerfilScreen extends StatelessWidget {
+class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
+
+  @override
+  State<PerfilScreen> createState() => _PerfilScreenState();
+}
+
+class _PerfilScreenState extends State<PerfilScreen> {
+  final _authService = AuthService();
+  Map<String, dynamic>? _userData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final userData = await _authService.getUserData();
+
+    setState(() {
+      _userData = userData;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Logout'),
+        content: const Text('Deseja realmente sair da sua conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _authService.logout();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  String _getInitials(String? name) {
+    if (name == null || name.isEmpty) return '?';
+
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Perfil',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Perfil'),
+        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-
-            // Profile Picture and Info
-            Center(
-              child: Column(
-                children: [
-                  Stack(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _userData == null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        child: const Icon(
-                          Icons.person,
-                          size: 60,
-                          color: Colors.white,
-                        ),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.grey,
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xFF111827),
-                              width: 3,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                        ),
+                      const SizedBox(height: 16),
+                      const Text('Erro ao carregar dados do usuário'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadUserData,
+                        child: const Text('Tentar Novamente'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Pedro Silva',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadUserData,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        // Avatar e Nome
+                        Center(
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 60,
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                backgroundImage: _userData!['foto'] != null &&
+                                        _userData!['foto'].toString().isNotEmpty
+                                    ? NetworkImage(_userData!['foto'])
+                                    : null,
+                                child: _userData!['foto'] == null ||
+                                        _userData!['foto'].toString().isEmpty
+                                    ? Text(
+                                        _getInitials(_userData!['name']),
+                                        style: const TextStyle(
+                                          fontSize: 36,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _userData!['name'] ?? 'Nome não disponível',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _userData!['email'] ?? '',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.grey[600],
+                                    ),
+                              ),
+                              if (_userData!['tipo_usuario'] != null) ...[
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    _userData!['tipo_usuario']
+                                        .toString()
+                                        .toUpperCase(),
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Informações do Usuário
+                        Card(
+                          child: Column(
+                            children: [
+                              _buildInfoTile(
+                                context,
+                                icon: Icons.person_outline,
+                                title: 'Nome',
+                                value: _userData!['name'] ?? 'Não informado',
+                              ),
+                              const Divider(height: 1),
+                              _buildInfoTile(
+                                context,
+                                icon: Icons.email_outlined,
+                                title: 'Email',
+                                value: _userData!['email'] ?? 'Não informado',
+                              ),
+                              const Divider(height: 1),
+                              _buildInfoTile(
+                                context,
+                                icon: Icons.badge_outlined,
+                                title: 'Tipo de Usuário',
+                                value: _userData!['tipo_usuario'] ??
+                                    'Não informado',
+                              ),
+                              if (_userData!['id'] != null) ...[
+                                const Divider(height: 1),
+                                _buildInfoTile(
+                                  context,
+                                  icon: Icons.fingerprint,
+                                  title: 'ID',
+                                  value: _userData!['id'].toString(),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Botões de Ação
+                        Card(
+                          child: Column(
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.edit_outlined),
+                                title: const Text('Editar Perfil'),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Edição de perfil em desenvolvimento'),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const Divider(height: 1),
+                              ListTile(
+                                leading: const Icon(Icons.lock_outline),
+                                title: const Text('Alterar Senha'),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Alteração de senha em desenvolvimento'),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const Divider(height: 1),
+                              ListTile(
+                                leading: const Icon(Icons.settings_outlined),
+                                title: const Text('Configurações'),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Configurações em desenvolvimento'),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Botão de Logout
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _handleLogout,
+                            icon: const Icon(Icons.logout),
+                            label: const Text('Sair da Conta'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'pedro.silva@email.com',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Account Section
-            _buildSection(
-              context,
-              'Conta',
-              [
-                _buildListTile(
-                  context,
-                  'Informações pessoais',
-                  Icons.person_outline,
-                  () {},
                 ),
-                _buildListTile(
-                  context,
-                  'Alterar senha',
-                  Icons.lock_outline,
-                  () {},
-                ),
-                _buildListTile(
-                  context,
-                  'Dispositivos vinculados',
-                  Icons.devices_other,
-                  () {},
-                ),
-              ],
-            ),
-
-            // Preferences Section
-            _buildSection(
-              context,
-              'Preferências',
-              [
-                _buildListTile(
-                  context,
-                  'Notificações',
-                  Icons.notifications_outlined,
-                  () {},
-                ),
-                _buildListTile(
-                  context,
-                  'Idioma',
-                  Icons.language,
-                  () {},
-                  trailing: const Text(
-                    'Português (BR)',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-                _buildListTile(
-                  context,
-                  'Tema',
-                  Icons.palette_outlined,
-                  () {},
-                  trailing: const Text(
-                    'Escuro',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-              ],
-            ),
-
-            // Support Section
-            _buildSection(
-              context,
-              'Suporte',
-              [
-                _buildListTile(
-                  context,
-                  'Central de ajuda',
-                  Icons.help_outline,
-                  () {},
-                ),
-                _buildListTile(
-                  context,
-                  'Enviar feedback',
-                  Icons.feedback_outlined,
-                  () {},
-                ),
-                _buildListTile(
-                  context,
-                  'Sobre',
-                  Icons.info_outline,
-                  () {},
-                ),
-              ],
-            ),
-
-            // Logout Button
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _showLogoutDialog(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Sair da conta',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildSection(
-    BuildContext context,
-    String title,
-    List<Widget> children,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          child: Text(
-            title,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1F2937),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(children: children),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildListTile(
-    BuildContext context,
-    String title,
-    IconData icon,
-    VoidCallback onTap, {
-    Widget? trailing,
+  Widget _buildInfoTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String value,
   }) {
     return ListTile(
-      leading: Icon(icon, color: Colors.white70),
+      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(
         title,
-        style: const TextStyle(color: Colors.white),
-      ),
-      trailing: trailing ??
-          const Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.white70,
-            size: 16,
-          ),
-      onTap: onTap,
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1F2937),
-        title: const Text(
-          'Sair da conta',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'Tem certeza que deseja sair da sua conta?',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
-            },
-            child: const Text(
-              'Sair',
-              style: TextStyle(color: Colors.red),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey[600],
             ),
-          ),
-        ],
+      ),
+      subtitle: Text(
+        value,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
       ),
     );
   }

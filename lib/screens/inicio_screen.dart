@@ -3,9 +3,50 @@ import 'perfil_screen.dart';
 import 'listas_notas_screen.dart';
 import 'alarmes_timers_screen.dart';
 import 'notificacoes_screen.dart';
+import '../services/auth_service.dart';
 
-class InicioScreen extends StatelessWidget {
+class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
+
+  @override
+  State<InicioScreen> createState() => _InicioScreenState();
+}
+
+class _InicioScreenState extends State<InicioScreen> {
+  final _authService = AuthService();
+  String _userName = 'Usuário';
+  String? _userPhoto;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final userData = await _authService.getUserData();
+    if (userData != null && mounted) {
+      setState(() {
+        _userName = userData['name'] ?? 'Usuário';
+        _userPhoto = userData['foto'];
+      });
+    }
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Bom dia';
+    } else if (hour < 18) {
+      return 'Boa tarde';
+    } else {
+      return 'Boa noite';
+    }
+  }
+
+  String _getFirstName(String fullName) {
+    return fullName.split(' ').first;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,12 +59,30 @@ class InicioScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Início',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onBackground,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getGreeting(),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getFirstName(_userName),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onBackground,
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
               Row(
                 children: [
@@ -34,16 +93,22 @@ class InicioScreen extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (context) => const PerfilScreen(),
                         ),
-                      );
+                      ).then((_) => _loadUserData());
                     },
                     child: CircleAvatar(
-                      radius: 16,
+                      radius: 20,
                       backgroundColor: Theme.of(context).colorScheme.primary,
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                      backgroundImage:
+                          _userPhoto != null && _userPhoto!.isNotEmpty
+                              ? NetworkImage(_userPhoto!)
+                              : null,
+                      child: _userPhoto == null || _userPhoto!.isEmpty
+                          ? const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 22,
+                            )
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -59,6 +124,7 @@ class InicioScreen extends StatelessWidget {
                     child: Icon(
                       Icons.notifications_outlined,
                       color: Theme.of(context).colorScheme.onBackground,
+                      size: 28,
                     ),
                   ),
                 ],
