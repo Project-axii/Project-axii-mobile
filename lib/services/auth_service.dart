@@ -10,6 +10,16 @@ class AuthService {
   static const String _keyRememberMe = 'rememberMe';
   static const String _keyLoginTime = 'loginTime';
 
+  Map<String, dynamic> _normalizeUserData(Map<String, dynamic> userData) {
+    return {
+      'id': userData['id'],
+      'name': userData['name'] ?? userData['nome'],
+      'email': userData['email'],
+      'foto': userData['foto'],
+      'tipo_usuario': userData['tipo_usuario'],
+    };
+  }
+
   Future<Map<String, dynamic>> login(String email, String password,
       {bool rememberMe = true}) async {
     try {
@@ -34,15 +44,17 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
+        final normalizedUser = _normalizeUserData(data['user']);
+
         await _saveUserData(
           data['token'],
-          data['user'],
+          normalizedUser,
           rememberMe: rememberMe,
         );
 
         return {
           'success': true,
-          'user': data['user'],
+          'user': normalizedUser,
           'message': data['message'],
         };
       } else {
@@ -77,7 +89,6 @@ class AuthService {
       final isLogged = prefs.getBool(_keyIsLoggedIn) ?? false;
       final rememberMe = prefs.getBool(_keyRememberMe) ?? true;
       final token = prefs.getString(_keyToken);
-      final loginTimeStr = prefs.getString(_keyLoginTime);
 
       if (!isLogged || token == null || token.isEmpty) {
         return false;
@@ -219,15 +230,17 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 201 && data['success'] == true) {
+        final normalizedUser = _normalizeUserData(data['user']);
+
         await _saveUserData(
           data['token'],
-          data['user'],
+          normalizedUser,
           rememberMe: rememberMe,
         );
 
         return {
           'success': true,
-          'user': data['user'],
+          'user': normalizedUser,
           'message': data['message'],
         };
       } else {
