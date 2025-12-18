@@ -14,9 +14,9 @@ class ApiConfig {
   static const String baseRoot = '/tcc-axii/Project-Axii-api/api/';
 
   // Endpoints
-  static const String loginEndpoint = 'login.php';
-  static const String registerEndpoint = 'register.php';
-  static const String forgotPasswordEndpoint = 'forgot_password.php';
+  static const String loginEndpoint = 'auth/login.php';
+  static const String registerEndpoint = 'auth/register.php';
+  static const String forgotPasswordEndpoint = 'auth/forgot_password.php';
   static const String devicesListEndpoint = 'devices/list.php';
   static const String deviceToggleEndpoint = 'devices/toggle.php';
   static const String deviceUpdateEndpoint = 'devices/update.php';
@@ -26,6 +26,7 @@ class ApiConfig {
   static const String notificationMarkReadEndpoint =
       'notifications/mark_read.php';
   static const String notificationReadEndpoint = 'notifications/read.php';
+  static const String validateTokenEndpoint = 'auth/validate_token.php';
 
   static const String fallbackBaseUrl = 'https://a7bc62effefa.ngrok-free.app';
 
@@ -89,6 +90,8 @@ class ApiConfig {
       '$baseUrl$baseRoot$notificationMarkReadEndpoint';
   static String get notificationReadUrl =>
       '$baseUrl$baseRoot$notificationReadEndpoint';
+  static String get validateTokenUrl =>
+      '$baseUrl$baseRoot$validateTokenEndpoint';
 
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',

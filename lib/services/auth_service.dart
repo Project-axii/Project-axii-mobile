@@ -87,24 +87,34 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isLogged = prefs.getBool(_keyIsLoggedIn) ?? false;
-      final rememberMe = prefs.getBool(_keyRememberMe) ?? true;
+      final rememberMe = prefs.getBool(_keyRememberMe) ?? false;
       final token = prefs.getString(_keyToken);
 
-      if (!isLogged || token == null || token.isEmpty) {
+      if (!isLogged) {
+        print('Usuário não está logado');
+        return false;
+      }
+
+      if (token == null || token.isEmpty) {
+        print('Token não encontrado');
+        await logout();
         return false;
       }
 
       if (!rememberMe) {
+        print('Remember me está desativado');
         await logout();
         return false;
       }
 
-      final isValidToken = await _validateJwtToken(token);
+      final isValidToken = await _validateCustomToken(token);
       if (!isValidToken) {
+        print('Token expirado ou inválido');
         await logout();
         return false;
       }
 
+      print('Usuário está logado e token é válido');
       return true;
     } catch (e) {
       print('Erro ao verificar login: $e');
@@ -112,16 +122,9 @@ class AuthService {
     }
   }
 
-  Future<bool> _validateJwtToken(String token) async {
+  Future<bool> _validateCustomToken(String token) async {
     try {
-      final parts = token.split('.');
-      if (parts.length != 3) {
-        return false;
-      }
-
-      final payload = parts[1];
-      final normalized = base64Url.normalize(payload);
-      final decoded = utf8.decode(base64Url.decode(normalized));
+      final decoded = utf8.decode(base64Decode(token));
       final tokenData = jsonDecode(decoded);
 
       if (tokenData['exp'] != null) {
@@ -129,15 +132,45 @@ class AuthService {
         final expirationDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
         final now = DateTime.now();
 
-        if (now.isAfter(expirationDate.subtract(const Duration(minutes: 1)))) {
+        if (now.isAfter(expirationDate.subtract(const Duration(minutes: 5)))) {
           return false;
         }
+      }
+
+      if (tokenData['id'] == null || tokenData['email'] == null) {
+        return false;
       }
 
       return true;
     } catch (e) {
       print('Erro ao validar token: $e');
       return false;
+    }
+  }
+
+  Future<bool> validateTokenWithBackend(String token) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.validateTokenUrl),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'token': token,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return true;
     }
   }
 
@@ -192,6 +225,7 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
+      print('Todos os dados foram limpos');
     } catch (e) {
       print('Erro ao limpar dados: $e');
     }
@@ -288,6 +322,7 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_keyLoginTime, DateTime.now().toIso8601String());
+      print('Sessão renovada');
     } catch (e) {
       print('Erro ao renovar sessão: $e');
     }
