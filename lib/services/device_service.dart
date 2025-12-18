@@ -164,6 +164,89 @@ class DeviceService {
     }
   }
 
+  // Alternar todos os dispositivos de uma sala
+  Future<Map<String, dynamic>> toggleRoomDevices(
+      String roomName, String action) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Token não encontrado',
+        };
+      }
+
+      final response = await http.post(
+        Uri.parse(ApiConfig.deviceToggleGroupUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'sala': roomName,
+          'action': action,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data;
+      } else {
+        return {
+          'success': false,
+          'message': 'Erro ao alternar grupo: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Erro de conexão: ${e.toString()}',
+      };
+    }
+  }
+
+  // Alternar dispositivos de uma categoria específica em uma sala
+  Future<Map<String, dynamic>> toggleCategoryDevices(
+      String roomName, String tipo, String action) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Token não encontrado',
+        };
+      }
+
+      final response = await http.post(
+        Uri.parse(ApiConfig.deviceToggleGroupUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'sala': roomName,
+          'tipo': tipo,
+          'action': action,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data;
+      } else {
+        return {
+          'success': false,
+          'message': 'Erro ao alternar categoria: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Erro de conexão: ${e.toString()}',
+      };
+    }
+  }
+
   // Atualizar dispositivo
   Future<Map<String, dynamic>> updateDevice({
     required int id,

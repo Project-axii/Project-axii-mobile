@@ -19,6 +19,7 @@ class ApiConfig {
   static const String forgotPasswordEndpoint = 'auth/forgot_password.php';
   static const String devicesListEndpoint = 'devices/list.php';
   static const String deviceToggleEndpoint = 'devices/toggle.php';
+  static const String deviceToggleGroupEndpoint = 'devices/toggle_group.php';
   static const String deviceUpdateEndpoint = 'devices/update.php';
   static const String roomsEndpoint = 'devices/rooms.php';
   static const String deviceCreateEndpoint = 'devices/create.php';
@@ -81,6 +82,8 @@ class ApiConfig {
       '$baseUrl$baseRoot$forgotPasswordEndpoint';
   static String get devicesListUrl => '$baseUrl$baseRoot$devicesListEndpoint';
   static String get deviceToggleUrl => '$baseUrl$baseRoot$deviceToggleEndpoint';
+  static String get deviceToggleGroupUrl =>
+      '$baseUrl$baseRoot$deviceToggleGroupEndpoint';
   static String get deviceUpdateUrl => '$baseUrl$baseRoot$deviceUpdateEndpoint';
   static String get roomsUrl => '$baseUrl$baseRoot$roomsEndpoint';
   static String get deviceCreateUrl => '$baseUrl$baseRoot$deviceCreateEndpoint';

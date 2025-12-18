@@ -156,8 +156,7 @@ class _InicioScreenState extends State<InicioScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.list_alt, color: Colors.blue),
-              title: const Text('Lista de compras'),
-              subtitle: const Text('1 item'),
+              title: const Text('Lista e notas'),
               trailing: const Icon(Icons.add_circle, color: Colors.blue),
               onTap: () {
                 Navigator.push(
@@ -188,17 +187,6 @@ class _InicioScreenState extends State<InicioScreen> {
             ),
           ),
           const SizedBox(height: 12),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.music_note, color: Colors.green),
-              title: const Text('Vincule serviços de música'),
-              subtitle: const Text(
-                  'Faça o streaming de sua música favorita e\nmais.'),
-              onTap: () {},
-            ),
-          ),
-          const SizedBox(height: 24),
 
           // Favoritos Section
           Row(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'adicionar_dispositivos_screen.dart';
-import 'novo_grupo_screen.dart';
 import 'detalhes_dispositivo_screen.dart';
 import '../services/device_service.dart';
 
@@ -67,10 +66,16 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
     if (mounted) {
       setState(() {
         if (result['success'] == true) {
-          _rooms = result['data'] ?? [];
+          _rooms = (result['data'] ?? [])
+              .where((room) =>
+                  room is Map &&
+                  room['name'] != null &&
+                  room['name'].toString().isNotEmpty)
+              .toList();
         } else {
           _rooms = [];
         }
+
         _isLoadingRooms = false;
       });
     }
@@ -84,9 +89,7 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
       if (result['success'] == true) {
         setState(() {
           if (result['data'] != null && result['data'] is Map) {
-            setState(() {
-              _devices[index] = result['data'];
-            });
+            _devices[index] = result['data'];
           } else {
             _loadDevices(sala: _selectedRoom);
           }
@@ -107,6 +110,70 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
         );
       }
     }
+  }
+
+  Future<void> _toggleCategory(
+      String roomName, String tipo, String action) async {
+    final result =
+        await _deviceService.toggleCategoryDevices(roomName, tipo, action);
+
+    if (mounted) {
+      if (result['success'] == true) {
+        await _loadDevices(sala: _selectedRoom);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Categoria atualizada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Erro ao atualizar categoria'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleRoomDevices(String roomName, String action) async {
+    final result = await _deviceService.toggleRoomDevices(roomName, action);
+
+    if (mounted) {
+      if (result['success'] == true) {
+        await _loadDevices(sala: _selectedRoom);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Sala atualizada com sucesso'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Erro ao atualizar sala'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Map<String, List<dynamic>> _groupDevicesByType() {
+    final Map<String, List<dynamic>> grouped = {};
+
+    for (var device in _devices) {
+      final tipo = device['tipo']?.toString() ?? 'outros';
+      if (!grouped.containsKey(tipo)) {
+        grouped[tipo] = [];
+      }
+      grouped[tipo]!.add(device);
+    }
+
+    return grouped;
   }
 
   IconData _getDeviceIcon(String tipo) {
@@ -137,6 +204,33 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
       default:
         return Colors.grey;
     }
+  }
+
+  String _getTypeName(String tipo) {
+    switch (tipo.toLowerCase()) {
+      case 'computador':
+        return 'Computadores';
+      case 'projetor':
+        return 'Projetores';
+      case 'iluminacao':
+        return 'Iluminação';
+      case 'ar_condicionado':
+        return 'Ar Condicionado';
+      default:
+        return 'Outros';
+    }
+  }
+
+  void _showRoomDetails(String roomName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RoomDetailsScreen(
+          roomName: roomName,
+          onRefresh: () => _loadData(),
+        ),
+      ),
+    ).then((_) => _loadData());
   }
 
   @override
@@ -185,7 +279,7 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Grupos Section (Salas)
+          // Grupos Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -196,129 +290,27 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
                       color: Theme.of(context).colorScheme.onBackground,
                     ),
               ),
-              if (_selectedRoom != null)
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedRoom = null;
-                    });
-                    _loadDevices();
-                  },
-                  child: const Text('Ver todos'),
-                ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // Rooms List
-          SizedBox(
-            height: 120,
+          // Rooms Grid
+          Expanded(
             child: _isLoadingRooms
                 ? const Center(child: CircularProgressIndicator())
                 : _rooms.isEmpty
-                    ? Center(
-                        child: Text(
-                          'Nenhuma sala cadastrada',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      )
-                    : ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _rooms.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == _rooms.length) {
-                            return Padding(
-                              padding: const EdgeInsets.only(left: 16),
-                              child: _buildGroupCard(
-                                context,
-                                'Nova sala',
-                                Icons.add,
-                                true,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const NovoGrupoScreen(),
-                                    ),
-                                  ).then((_) => _loadRooms());
-                                },
-                              ),
-                            );
-                          }
-
-                          final room = _rooms[index];
-                          final roomName = room['name'] ?? room['sala'] ?? '';
-                          final total = int.tryParse(
-                                  room['devices']?.toString() ?? '0') ??
-                              0;
-                          final online =
-                              int.tryParse(room['online']?.toString() ?? '0') ??
-                                  0;
-
-                          final isSelected = _selectedRoom == roomName;
-
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              right: 16,
-                              left: index == 0 ? 0 : 0,
-                            ),
-                            child: _buildRoomCard(
-                              context,
-                              roomName,
-                              total,
-                              online,
-                              isSelected,
-                              onTap: () {
-                                setState(() {
-                                  _selectedRoom = roomName;
-                                });
-                                _loadDevices(sala: roomName);
-                              },
-                            ),
-                          );
-                        },
-                      ),
-          ),
-          const SizedBox(height: 32),
-
-          // Dispositivos Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _selectedRoom ?? 'Todos os Dispositivos',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
-              ),
-              if (_devices.isNotEmpty)
-                Text(
-                  '${_devices.length} ${_devices.length == 1 ? 'dispositivo' : 'dispositivos'}',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Devices List
-          Expanded(
-            child: _isLoadingDevices
-                ? const Center(child: CircularProgressIndicator())
-                : _devices.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.devices_other,
+                              Icons.meeting_room_outlined,
                               size: 64,
                               color: Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Nenhum dispositivo encontrado',
+                              'Nenhuma sala com dispositivos',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 16,
@@ -343,87 +335,30 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
                       )
                     : RefreshIndicator(
                         onRefresh: _loadData,
-                        child: ListView.builder(
-                          itemCount: _devices.length,
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 1.1,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                          itemCount: _rooms.length,
                           itemBuilder: (context, index) {
-                            final device = _devices[index];
-                            final status =
-                                device['status']?.toString().toLowerCase();
-                            final isOnline = status == 'online' ||
-                                status == '1' ||
-                                status == 'true';
-                            final tipo = device['tipo']?.toString() ?? '';
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Card(
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor:
-                                        _getDeviceColor(device['tipo'])
-                                            .withOpacity(0.2),
-                                    child: Icon(_getDeviceIcon(tipo),
-                                        color: _getDeviceColor(tipo)),
-                                  ),
-                                  title: Text(device['nome']),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(device['sala'] ?? 'Sem sala'),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              color: isOnline
-                                                  ? Colors.green
-                                                  : Colors.grey,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            isOnline ? 'Online' : 'Offline',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isOnline
-                                                  ? Colors.green
-                                                  : Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  trailing: Switch(
-                                    value: isOnline,
-                                    onChanged: (value) {
-                                      _toggleDevice(device['id'], index);
-                                    },
-                                    activeColor:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            DetalhesDispositivoScreen(
-                                          deviceId: device['id'],
-                                          nomeDispositivo: device['nome'],
-                                          tipoDispositivo: device['tipo'],
-                                          isOnline: isOnline,
-                                          sala: device['sala'],
-                                        ),
-                                      ),
-                                    ).then((_) =>
-                                        _loadDevices(sala: _selectedRoom));
-                                  },
-                                ),
-                              ),
+                            final room = _rooms[index];
+                            final roomName = room['name'] ?? room['sala'] ?? '';
+                            final total = int.tryParse(
+                                    room['devices']?.toString() ?? '0') ??
+                                0;
+                            final online = int.tryParse(
+                                    room['online']?.toString() ?? '0') ??
+                                0;
+                            return _buildRoomCard(
+                              context,
+                              roomName,
+                              total,
+                              online,
+                              onTap: () => _showRoomDetails(roomName),
                             );
                           },
                         ),
@@ -434,42 +369,98 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
     );
   }
 
-  Widget _buildGroupCard(
+  Widget _buildRoomCard(
     BuildContext context,
-    String title,
-    IconData icon,
-    bool isDashed, {
+    String name,
+    int totalDevices,
+    int onlineDevices, {
     VoidCallback? onTap,
   }) {
-    return Container(
-      width: 100,
-      decoration: BoxDecoration(
-        color: isDashed ? Colors.transparent : Theme.of(context).cardColor,
-        border: isDashed
-            ? Border.all(color: Colors.grey.shade600, style: BorderStyle.solid)
-            : null,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    final percentage = totalDevices > 0 ? (onlineDevices / totalDevices) : 0.0;
+
+    return Card(
+      elevation: 2,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                icon,
-                size: 32,
-                color: isDashed ? Colors.grey.shade600 : Colors.grey.shade400,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CircleAvatar(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    radius: 24,
+                    child: Icon(
+                      Icons.meeting_room,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: onlineDevices > 0
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$onlineDevices/$totalDevices',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: onlineDevices > 0 ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Online',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                      ),
+                      Text(
+                        '${(percentage * 100).toStringAsFixed(0)}%',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[600],
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: percentage,
+                    backgroundColor: Colors.grey[300],
+                    color: onlineDevices > 0 ? Colors.green : Colors.grey,
+                  ),
+                ],
               ),
             ],
           ),
@@ -477,67 +468,339 @@ class _DispositivosScreenState extends State<DispositivosScreen> {
       ),
     );
   }
+}
 
-  Widget _buildRoomCard(
-    BuildContext context,
-    String name,
-    int totalDevices,
-    int onlineDevices,
-    bool isSelected, {
-    VoidCallback? onTap,
-  }) {
-    return Container(
-      width: 140,
-      decoration: BoxDecoration(
-        color: isSelected
-            ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-            : Theme.of(context).cardColor,
-        border: isSelected
-            ? Border.all(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2,
-              )
-            : null,
-        borderRadius: BorderRadius.circular(12),
+// Nova tela de detalhes da sala
+class RoomDetailsScreen extends StatefulWidget {
+  final String roomName;
+  final VoidCallback onRefresh;
+
+  const RoomDetailsScreen({
+    super.key,
+    required this.roomName,
+    required this.onRefresh,
+  });
+
+  @override
+  State<RoomDetailsScreen> createState() => _RoomDetailsScreenState();
+}
+
+class _RoomDetailsScreenState extends State<RoomDetailsScreen> {
+  final _deviceService = DeviceService();
+  List<dynamic> _devices = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDevices();
+  }
+
+  Future<void> _loadDevices() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await _deviceService.getDevices(sala: widget.roomName);
+
+    if (mounted) {
+      setState(() {
+        if (result['success'] == true) {
+          _devices = result['data'] ?? [];
+        } else {
+          _devices = [];
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
+  Map<String, List<dynamic>> _groupDevicesByType() {
+    final Map<String, List<dynamic>> grouped = {};
+
+    for (var device in _devices) {
+      final tipo = device['tipo']?.toString() ?? 'outros';
+      if (!grouped.containsKey(tipo)) {
+        grouped[tipo] = [];
+      }
+      grouped[tipo]!.add(device);
+    }
+
+    return grouped;
+  }
+
+  Future<void> _toggleDevice(int deviceId) async {
+    final result =
+        await _deviceService.toggleDevice(deviceId, action: 'toggle_status');
+
+    if (mounted) {
+      if (result['success'] == true) {
+        await _loadDevices();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Status alterado'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Erro'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleCategory(String tipo, String action) async {
+    final result = await _deviceService.toggleCategoryDevices(
+      widget.roomName,
+      tipo,
+      action,
+    );
+
+    if (mounted) {
+      if (result['success'] == true) {
+        await _loadDevices();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Categoria atualizada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleAllDevices(String action) async {
+    final result =
+        await _deviceService.toggleRoomDevices(widget.roomName, action);
+
+    if (mounted) {
+      if (result['success'] == true) {
+        await _loadDevices();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Sala atualizada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
+  IconData _getDeviceIcon(String tipo) {
+    switch (tipo.toLowerCase()) {
+      case 'computador':
+        return Icons.computer;
+      case 'projetor':
+        return Icons.tv;
+      case 'iluminacao':
+        return Icons.lightbulb;
+      case 'ar_condicionado':
+        return Icons.ac_unit;
+      default:
+        return Icons.devices;
+    }
+  }
+
+  Color _getDeviceColor(String tipo) {
+    switch (tipo.toLowerCase()) {
+      case 'computador':
+        return Colors.blue;
+      case 'projetor':
+        return Colors.purple;
+      case 'iluminacao':
+        return Colors.yellow;
+      case 'ar_condicionado':
+        return Colors.cyan;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getTypeName(String tipo) {
+    switch (tipo.toLowerCase()) {
+      case 'computador':
+        return 'Computadores';
+      case 'projetor':
+        return 'Projetores';
+      case 'iluminacao':
+        return 'Iluminação';
+      case 'ar_condicionado':
+        return 'Ar Condicionado';
+      default:
+        return 'Outros';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final groupedDevices = _groupDevicesByType();
+    final totalDevices = _devices.length;
+    final onlineDevices = _devices.where((d) {
+      final status = d['status']?.toString().toLowerCase();
+      return status == 'online' || status == '1' || status == 'true';
+    }).length;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.roomName),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadDevices,
+          ),
+        ],
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                // Cabeçalho da sala com controle geral
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Status Geral',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$onlineDevices de $totalDevices online',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton.filled(
+                                onPressed: () => _toggleAllDevices('ligar'),
+                                icon: const Icon(Icons.power_settings_new),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton.filled(
+                                onPressed: () => _toggleAllDevices('desligar'),
+                                icon: const Icon(Icons.power_off),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Lista de categorias
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: groupedDevices.length,
+                    itemBuilder: (context, index) {
+                      final tipo = groupedDevices.keys.elementAt(index);
+                      final devices = groupedDevices[tipo]!;
+                      final onlineCount = devices.where((d) {
+                        final status = d['status']?.toString().toLowerCase();
+                        return status == 'online' ||
+                            status == '1' ||
+                            status == 'true';
+                      }).length;
+
+                      return _buildCategoryCard(
+                        tipo,
+                        devices,
+                        onlineCount,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildCategoryCard(
+      String tipo, List<dynamic> devices, int onlineCount) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          leading: CircleAvatar(
+            backgroundColor: _getDeviceColor(tipo).withOpacity(0.2),
+            child: Icon(
+              _getDeviceIcon(tipo),
+              color: _getDeviceColor(tipo),
+            ),
+          ),
+          title: Text(
+            _getTypeName(tipo),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Text('$onlineCount de ${devices.length} online'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.meeting_room,
-                size: 32,
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade400,
+              IconButton(
+                icon: const Icon(Icons.power_settings_new, size: 20),
+                onPressed: () => _toggleCategory(tipo, 'ligar'),
+                color: Colors.green,
+                tooltip: 'Ligar todos',
               ),
-              const SizedBox(height: 8),
-              Text(
-                name,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              IconButton(
+                icon: const Icon(Icons.power_off, size: 20),
+                onPressed: () => _toggleCategory(tipo, 'desligar'),
+                color: Colors.red,
+                tooltip: 'Desligar todos',
               ),
-              const SizedBox(height: 4),
-              Text(
-                '$onlineDevices/$totalDevices online',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontSize: 11,
-                    ),
-              ),
+              const Icon(Icons.expand_more),
             ],
           ),
+          children: devices.map((device) {
+            final status = device['status']?.toString().toLowerCase();
+            final isOnline =
+                status == 'online' || status == '1' || status == 'true';
+
+            return ListTile(
+              leading: Icon(
+                isOnline ? Icons.check_circle : Icons.circle_outlined,
+                color: isOnline ? Colors.green : Colors.grey,
+              ),
+              title: Text(device['nome']),
+              subtitle: Text(device['ip'] ?? ''),
+              trailing: Switch(
+                value: isOnline,
+                onChanged: (value) => _toggleDevice(device['id']),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
