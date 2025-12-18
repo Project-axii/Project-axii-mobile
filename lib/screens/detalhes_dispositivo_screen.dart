@@ -28,7 +28,6 @@ class _DetalhesDispositivoScreenState extends State<DetalhesDispositivoScreen> {
 
   bool _isLigado = true;
   double _brightness = 75.0;
-  double _volume = 50.0;
   String _selectedMode = 'Normal';
   bool _isLoading = false;
 

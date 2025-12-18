@@ -590,6 +590,24 @@ class _RoomDetailsScreenState extends State<RoomDetailsScreen> {
     }
   }
 
+  void _openDeviceDetails(dynamic device) {
+    final status = device['status']?.toString().toLowerCase();
+    final isOnline = status == 'online' || status == '1' || status == 'true';
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetalhesDispositivoScreen(
+          deviceId: device['id'],
+          nomeDispositivo: device['nome'] ?? 'Sem nome',
+          tipoDispositivo: device['tipo'] ?? 'outros',
+          isOnline: isOnline,
+          sala: widget.roomName,
+        ),
+      ),
+    ).then((_) => _loadDevices());
+  }
+
   IconData _getDeviceIcon(String tipo) {
     switch (tipo.toLowerCase()) {
       case 'computador':
@@ -799,6 +817,7 @@ class _RoomDetailsScreenState extends State<RoomDetailsScreen> {
                 value: isOnline,
                 onChanged: (value) => _toggleDevice(device['id']),
               ),
+              onTap: () => _openDeviceDetails(device),
             );
           }).toList(),
         ),
