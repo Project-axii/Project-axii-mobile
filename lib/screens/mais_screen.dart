@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'controle_sala_screen.dart';
 import 'monitoramento_screen.dart';
 import 'rotinas_screen.dart';
 import 'listas_notas_screen.dart';
@@ -16,12 +15,6 @@ class MaisScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final menuItems = [
-      {
-        'icon': Icons.control_camera,
-        'title': 'Controle de Sala',
-        'color': const Color(0xFF8B5CF6),
-        'route': const ControleSalaScreen(),
-      },
       {
         'icon': Icons.monitor,
         'title': 'Monitoramento',
@@ -42,7 +35,7 @@ class MaisScreen extends StatelessWidget {
       },
       {
         'icon': Icons.list_alt,
-        'title': 'Listas e notas',
+        'title': 'Listas',
         'color': Colors.yellow,
         'route': const ListasNotasScreen(),
       },
@@ -60,7 +53,7 @@ class MaisScreen extends StatelessWidget {
       },
       {
         'icon': Icons.access_time,
-        'title': 'Alarmes e timers',
+        'title': 'Alarmes',
         'color': Colors.red,
         'route': const AlarmesTimersScreen(),
       },
@@ -168,30 +161,6 @@ class MaisScreen extends StatelessWidget {
                 );
               },
             ),
-          ),
-
-          // Dots Indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade600,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
           ),
           const SizedBox(height: 24),
 
