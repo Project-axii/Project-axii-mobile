@@ -28,6 +28,14 @@ class ApiConfig {
       'notifications/mark_read.php';
   static const String notificationReadEndpoint = 'notifications/read.php';
   static const String validateTokenEndpoint = 'auth/validate_token.php';
+  static const String routineListEndpoint = 'routine/list.php';
+  static const String routineUpdateEndpoint = 'routine/update.php';
+  static const String routineCreateEndpoint = 'routine/create.php';
+  static const String routineDeleteEndpoint = 'routine/delete.php';
+  static const String routineExecutetEndpoint = 'routine/execute.php';
+  static const String routineToggleEndpoint = 'routine/toggle.php';
+  static const String groupCreateEndpoint = 'group/create.php';
+  static const String groupListEndpoint = 'group/list.php';
 
   static const String fallbackBaseUrl = 'https://a7bc62effefa.ngrok-free.app';
 
@@ -95,6 +103,19 @@ class ApiConfig {
       '$baseUrl$baseRoot$notificationReadEndpoint';
   static String get validateTokenUrl =>
       '$baseUrl$baseRoot$validateTokenEndpoint';
+  static String get routineCreateUrl =>
+      '$baseUrl$baseRoot$routineCreateEndpoint';
+  static String get routineUpdateUrl =>
+      '$baseUrl$baseRoot$routineUpdateEndpoint';
+  static String get routineDeleteUrl =>
+      '$baseUrl$baseRoot$routineDeleteEndpoint';
+  static String get routineListUrl => '$baseUrl$baseRoot$routineListEndpoint';
+  static String get routineToggleUrl =>
+      '$baseUrl$baseRoot$routineToggleEndpoint';
+  static String get routineExecutetUrl =>
+      '$baseUrl$baseRoot$routineExecutetEndpoint';
+  static String get groupCreateUrl => '$baseUrl$baseRoot$groupCreateEndpoint';
+  static String get groupListUrl => '$baseUrl$baseRoot$groupListEndpoint';
 
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
