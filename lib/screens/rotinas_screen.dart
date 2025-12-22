@@ -148,7 +148,10 @@ class _RotinasScreenState extends State<RotinasScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.grey),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -232,7 +235,13 @@ class _RotinasScreenState extends State<RotinasScreen> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _carregarRotinas,
-                        child: const Text('Tentar Novamente'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B5CF6),
+                        ),
+                        child: const Text(
+                          'Tentar Novamente',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
@@ -268,14 +277,14 @@ class _RotinasScreenState extends State<RotinasScreen> {
                                   const SizedBox(height: 24),
                                   ElevatedButton.icon(
                                     onPressed: _navegarParaCriarRotina,
-                                    icon: const Icon(Icons.add),
-                                    label: const Text('Criar Primeira Rotina'),
+                                    icon: const Icon(Icons.add,
+                                        color: Colors.white),
+                                    label: const Text(
+                                      'Criar Primeira Rotina',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF8B5CF6),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 12,
-                                      ),
                                     ),
                                   ),
                                 ],
@@ -408,6 +417,8 @@ class _RotinasScreenState extends State<RotinasScreen> {
                         _toggleRotina(rotina['id'], index);
                       },
                       activeColor: const Color(0xFF8B5CF6),
+                      inactiveThumbColor: Colors.grey[400],
+                      inactiveTrackColor: Colors.grey[700],
                     ),
                     TextButton(
                       onPressed: () {
@@ -500,9 +511,11 @@ class _RotinasScreenState extends State<RotinasScreen> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: Colors.grey),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Editar'),
+                    child: const Text(
+                      'Editar',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -514,9 +527,11 @@ class _RotinasScreenState extends State<RotinasScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5CF6),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Executar Agora'),
+                    child: const Text(
+                      'Executar Agora',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ],

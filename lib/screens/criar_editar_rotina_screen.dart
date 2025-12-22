@@ -435,12 +435,13 @@ class _CriarEditarRotinaScreenState extends State<CriarEditarRotinaScreen> {
                   value: _acao,
                   isExpanded: true,
                   dropdownColor: const Color(0xFF1E1E1E),
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
                   icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
                   items: _acoes.map((acao) {
                     return DropdownMenuItem<String>(
                       value: acao['value'],
-                      child: Text(acao['label']!),
+                      child: Text(acao['label']!,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 16)),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -497,6 +498,8 @@ class _CriarEditarRotinaScreenState extends State<CriarEditarRotinaScreen> {
                       });
                     },
                     activeColor: const Color(0xFF8B5CF6),
+                    inactiveThumbColor: Colors.grey[400],
+                    inactiveTrackColor: Colors.grey[700],
                   ),
                 ],
               ),
@@ -527,6 +530,7 @@ class _CriarEditarRotinaScreenState extends State<CriarEditarRotinaScreen> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
               ),
@@ -618,12 +622,14 @@ class _CriarEditarRotinaScreenState extends State<CriarEditarRotinaScreen> {
         ),
         isExpanded: true,
         dropdownColor: const Color(0xFF1E1E1E),
-        style: const TextStyle(color: Colors.white, fontSize: 16),
         icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
         items: lista.map<DropdownMenuItem<int>>((item) {
           return DropdownMenuItem<int>(
             value: item['id'],
-            child: Text(item['nome'] ?? 'Sem nome'),
+            child: Text(
+              item['nome'] ?? 'Sem nome',
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
           );
         }).toList(),
         onChanged: (value) {
@@ -741,7 +747,7 @@ class _CriarEditarRotinaScreenState extends State<CriarEditarRotinaScreen> {
           selectedColor: const Color(0xFF8B5CF6),
           checkmarkColor: Colors.white,
           labelStyle: TextStyle(
-            color: selecionado ? Colors.white : Colors.grey[400],
+            color: selecionado ? Colors.white : Colors.grey.shade300,
             fontWeight: selecionado ? FontWeight.w600 : FontWeight.normal,
           ),
           side: BorderSide(
