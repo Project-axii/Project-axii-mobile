@@ -36,6 +36,12 @@ class ApiConfig {
   static const String routineToggleEndpoint = 'routine/toggle.php';
   static const String groupCreateEndpoint = 'group/create.php';
   static const String groupListEndpoint = 'group/list.php';
+  static const String listListEndpoint = 'list/list.php';
+  static const String listCreateEndpoint = 'list/create.php';
+  static const String listDeleteEndpoint = 'list/delete.php';
+  static const String listItensEndpoint = 'list/itens.php';
+  static const String listToggleEndpoint = 'list/toggle_item.php';
+  static const String listUpdateEndpoint = 'list/update.php';
 
   static const String fallbackBaseUrl = 'https://a7bc62effefa.ngrok-free.app';
 
@@ -116,6 +122,12 @@ class ApiConfig {
       '$baseUrl$baseRoot$routineExecutetEndpoint';
   static String get groupCreateUrl => '$baseUrl$baseRoot$groupCreateEndpoint';
   static String get groupListUrl => '$baseUrl$baseRoot$groupListEndpoint';
+  static String get listListUrl => '$baseUrl$baseRoot$listListEndpoint';
+  static String get listCreateUrl => '$baseUrl$baseRoot$listCreateEndpoint';
+  static String get listDeleteUrl => '$baseUrl$baseRoot$listDeleteEndpoint';
+  static String get listItensUrl => '$baseUrl$baseRoot$listItensEndpoint';
+  static String get listToggleUrl => '$baseUrl$baseRoot$listToggleEndpoint';
+  static String get listUpdateUrl => '$baseUrl$baseRoot$listUpdateEndpoint';
 
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
