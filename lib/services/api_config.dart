@@ -42,6 +42,10 @@ class ApiConfig {
   static const String listItensEndpoint = 'list/itens.php';
   static const String listToggleEndpoint = 'list/toggle_item.php';
   static const String listUpdateEndpoint = 'list/update.php';
+  static const String updateProfileEndpoint = 'user/update_profile.php';
+  static const String updatePasswordEndpoint = 'user/update_password.php';
+  static const String validatePasswordEndpoint = 'user/validate_password.php';
+  static const String uploadPhotoEndpoint = 'user/update_photo.php';
 
   static const String fallbackBaseUrl = 'https://a7bc62effefa.ngrok-free.app';
 
@@ -128,6 +132,13 @@ class ApiConfig {
   static String get listItensUrl => '$baseUrl$baseRoot$listItensEndpoint';
   static String get listToggleUrl => '$baseUrl$baseRoot$listToggleEndpoint';
   static String get listUpdateUrl => '$baseUrl$baseRoot$listUpdateEndpoint';
+  static String get updateProfileUrl =>
+      '$baseUrl$baseRoot$updateProfileEndpoint';
+  static String get updatePasswordUrl =>
+      '$baseUrl$baseRoot$updatePasswordEndpoint';
+  static String get validatePasswordUrl =>
+      '$baseUrl$baseRoot$validatePasswordEndpoint';
+  static String get uploadPhotoUrl => '$baseUrl$baseRoot$uploadPhotoEndpoint';
 
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'edit_profile_screen.dart';
+import 'change_password_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -31,6 +33,35 @@ class _PerfilScreenState extends State<PerfilScreen> {
       _userData = userData;
       _isLoading = false;
     });
+  }
+
+  Future<void> _navigateToEditProfile() async {
+    if (_userData == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(userData: _userData!),
+      ),
+    );
+
+    // Se retornou true, significa que o perfil foi atualizado
+    if (result == true) {
+      _loadUserData();
+    }
+  }
+
+  Future<void> _navigateToChangePassword() async {
+    if (_userData == null) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChangePasswordScreen(
+          userId: _userData!['id'],
+        ),
+      ),
+    );
   }
 
   Future<void> _handleLogout() async {
@@ -234,28 +265,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                 leading: const Icon(Icons.edit_outlined),
                                 title: const Text('Editar Perfil'),
                                 trailing: const Icon(Icons.chevron_right),
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Edição de perfil em desenvolvimento'),
-                                    ),
-                                  );
-                                },
+                                onTap: _navigateToEditProfile,
                               ),
                               const Divider(height: 1),
                               ListTile(
                                 leading: const Icon(Icons.lock_outline),
                                 title: const Text('Alterar Senha'),
                                 trailing: const Icon(Icons.chevron_right),
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Alteração de senha em desenvolvimento'),
-                                    ),
-                                  );
-                                },
+                                onTap: _navigateToChangePassword,
                               ),
                               const Divider(height: 1),
                               ListTile(
